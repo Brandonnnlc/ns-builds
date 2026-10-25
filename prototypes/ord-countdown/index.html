@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ORD Countdown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f5f8; --surface:#fff; --surface-2:#eceff4; --ink:#10141a; --muted:#5d6672; --line:#dce1e8;
+  --accent:#2457d6; --accent-ink:#fff; --accent-soft:#dfe8fb;
+  --good:#1f7a4a; --warn:#b5720f;
+  --radius:18px; --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(16,20,26,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b0e13; --surface:#131821; --surface-2:#1a2130; --ink:#eef2f8; --muted:#97a2b3; --line:#252e3d;
+    --accent:#7aa2ff; --accent-ink:#0b0e13; --accent-soft:#1b2a4d; --good:#6fd39b; --warn:#f2b552; --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b0e13; --surface:#131821; --surface-2:#1a2130; --ink:#eef2f8; --muted:#97a2b3; --line:#252e3d;
+  --accent:#7aa2ff; --accent-ink:#0b0e13; --accent-soft:#1b2a4d; --good:#6fd39b; --warn:#f2b552; --shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter Tight",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{padding:max(16px,env(safe-area-inset-top)) 16px 80px}
+.wrap{max-width:760px;margin:0 auto}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+header{display:flex;justify-content:space-between;align-items:center;margin:4px 0 16px}
+.brand{font-weight:800;letter-spacing:-.02em;font-size:20px}.brand span{color:var(--accent)}
+.chip{font-size:12px;font-weight:600;padding:6px 10px;border-radius:999px;background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 12px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+h3 small{text-transform:none;letter-spacing:0;font-weight:600}
+.hero .big{font-size:clamp(72px,22vw,128px);font-weight:900;letter-spacing:-.06em;line-height:.9}
+.hero .sub{color:var(--muted);font-size:15px;margin-top:6px}
+.prog{height:12px;background:var(--surface-2);border-radius:999px;overflow:hidden;margin:18px 0 8px;position:relative}
+.prog i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:999px;transition:width .8s ease}
+.progmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+.stat{background:var(--surface-2);border-radius:14px;padding:12px}
+.stat .k{font-size:11px;color:var(--muted);font-weight:600}
+.stat .v{font-size:22px;font-weight:800;margin-top:2px}
+.ms{display:flex;gap:12px;align-items:center;padding:12px;border-radius:12px;background:var(--accent-soft);margin-top:14px;font-size:14px}
+.ms b{font-size:15px}
+.weeks{display:grid;grid-template-columns:repeat(26,1fr);gap:3px;margin-top:6px}
+.weeks i{aspect-ratio:1;border-radius:3px;background:var(--surface-2)}
+.weeks i.done{background:var(--accent)}
+.weeks i.now{background:var(--ink)}
+.list{display:grid;gap:8px}
+.item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px}
+.item .t{font-weight:600}
+.item .m{font-size:12px;color:var(--muted)}
+.item .grow{flex:1;min-width:0}
+.item a{color:var(--accent);text-decoration:none;font-size:13px;font-weight:600}
+.del{border:0;background:none;color:var(--muted);cursor:pointer;font-size:18px;padding:2px 6px}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{display:flex;align-items:center;gap:8px;padding:8px 10px 8px 12px;border-radius:999px;background:var(--surface-2);font-size:14px;font-weight:600}
+.lvl{display:flex;gap:2px}.lvl i{width:6px;height:6px;border-radius:50%;background:var(--line)}.lvl i.on{background:var(--accent)}
+.tag button{border:0;background:none;color:var(--muted);cursor:pointer;padding:0 2px;font-size:15px}
+form.inline{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+form.inline input,form.inline select{flex:1;min-width:120px}
+input,select{font:inherit;font-size:16px;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);width:100%}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px}
+.btn{border:0;font:inherit;font-weight:700;font-size:14px;padding:11px 16px;border-radius:12px;cursor:pointer;background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line);font-size:13px;padding:9px 12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.goalbar{height:10px;background:var(--surface-2);border-radius:999px;overflow:hidden;position:relative;margin:12px 0 6px}
+.goalbar i{position:absolute;inset:0 auto 0 0;background:var(--good);border-radius:999px}
+.goalbar s{position:absolute;inset:0 auto 0 0;background:var(--good);opacity:.25;border-radius:999px;text-decoration:none}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.verdict{font-size:14px;margin-top:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.empty{font-size:14px;color:var(--muted);padding:6px 0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;transition:.25s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%)}
+details summary{cursor:pointer;font-weight:600;font-size:14px;margin-bottom:10px}
+@media (max-width:520px){
+  .stats{grid-template-columns:1fr 1fr}
+  .weeks{grid-template-columns:repeat(13,1fr)}
+  .grid3{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">ORD<span>.</span>count</div>
+    <div class="chip mono" id="todayChip"></div>
+  </header>
+
+  <section class="card hero">
+    <div class="big mono" id="daysLeft">0</div>
+    <div class="sub" id="heroSub">days to ORD</div>
+    <div class="prog"><i id="progBar" style="width:0"></i></div>
+    <div class="progmeta"><span id="pDone">0% done</span><span id="pDates"></span></div>
+    <div class="stats" id="stats"></div>
+    <div class="ms" id="milestone"></div>
+  </section>
+
+  <section class="card">
+    <h3>Weeks of NS <small class="mono" id="weeksMeta"></small></h3>
+    <div class="weeks" id="weeks" aria-label="Weeks of service"></div>
+  </section>
+
+  <section class="card">
+    <h3>Projects shipped <small class="mono" id="projMeta"></small></h3>
+    <div class="list" id="projects"></div>
+    <form class="inline" id="projForm">
+      <input id="pTitle" placeholder="What did you ship?" required>
+      <input id="pLink" placeholder="Link (optional)" type="url">
+      <button class="btn" type="submit">Add</button>
+    </form>
+    <p class="note" id="paceNote"></p>
+  </section>
+
+  <section class="card">
+    <h3>Skills learned <small class="mono" id="skillMeta"></small></h3>
+    <div class="tags" id="skills"></div>
+    <form class="inline" id="skillForm">
+      <input id="sName" placeholder="e.g. Solidity, GLSL" required>
+      <select id="sLevel" aria-label="Level">
+        <option value="1">Tried it</option><option value="2">Can build with it</option><option value="3">Confident</option>
+      </select>
+      <button class="btn" type="submit">Add</button>
+    </form>
+    <p class="note">Tap a skill to bump its level.</p>
+  </section>
+
+  <section class="card">
+    <h3>Savings goal <small class="mono" id="goalMeta"></small></h3>
+    <div class="grid3">
+      <div><label for="gTarget">Target ($)</label><input id="gTarget" type="number" min="0" inputmode="numeric"></div>
+      <div><label for="gSaved">Saved so far ($)</label><input id="gSaved" type="number" min="0" inputmode="numeric"></div>
+      <div><label for="gMonthly">Add per month ($)</label><input id="gMonthly" type="number" min="0" inputmode="numeric"></div>
+    </div>
+    <div class="goalbar"><s id="gProj"></s><i id="gNow"></i></div>
+    <div class="progmeta"><span id="gNowTxt"></span><span id="gProjTxt"></span></div>
+    <div class="verdict" id="gVerdict"></div>
+  </section>
+
+  <section class="card">
+    <details>
+      <summary>Settings</summary>
+      <div class="grid2">
+        <div><label for="enlist">Enlistment date</label><input id="enlist" type="date"></div>
+        <div><label for="ord">ORD date</label><input id="ord" type="date"></div>
+      </div>
+      <p class="note">Data stays in this browser. Export to back it up or move between devices.</p>
+      <div class="row">
+        <button class="btn ghost" id="exportBtn" type="button">Copy data</button>
+        <button class="btn ghost" id="importBtn" type="button">Paste data</button>
+        <button class="btn ghost" id="resetBtn" type="button">Reset</button>
+      </div>
+      <textarea id="io" style="display:none;width:100%;min-height:80px;margin-top:10px;font-family:JetBrains Mono,monospace;font-size:12px;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink)" placeholder="Paste exported data here, then tap Paste data again"></textarea>
+    </details>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(()=>{
+const KEY='ord-countdown-v1';
+const DAY=86400000;
+const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const todayD=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
+const DEFAULT={
+  enlist:'2026-10-01', ord:'2028-10-01',
+  projects:[{id:'p1',title:'IPPT Trainer',date:'2026-10-25',link:'https://claude.ai/artifact/95x5JbbYA7YTw7dDsWxRf6'}],
+  skills:[{id:'s1',name:'Web3 basics',level:1}],
+  goal:{target:null,saved:null,monthly:null}
+};
+let st;
+try{st=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!st) st=JSON.parse(JSON.stringify(DEFAULT));
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtD=d=>d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
+const money=n=>'$'+Math.round(n).toLocaleString();
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+function countWeekends(a,b){ // Saturdays between a (excl) and b (incl)
+  let n=0;const d=new Date(a);d.setDate(d.getDate()+1);
+  const first=(6-d.getDay()+7)%7;d.setDate(d.getDate()+first);
+  while(d<=b){n++;d.setDate(d.getDate()+7)}return n;
+}
+function monthsBetween(a,b){return Math.max(0,(b-a)/DAY/30.4375)}
+
+function renderCountdown(){
+  const t=todayD(),en=parse(st.enlist),ord=parse(st.ord);
+  const total=Math.max(1,Math.round((ord-en)/DAY));
+  const left=Math.max(0,Math.round((ord-t)/DAY));
+  const served=Math.min(total,Math.max(0,Math.round((t-en)/DAY)));
+  const pct=served/total*100;
+  $('todayChip').textContent=fmtD(t);
+  $('daysLeft').textContent=left.toLocaleString();
+  $('heroSub').textContent=left===0?'ORD LOH 🎉':left===1?'day to ORD':'days to ORD';
+  $('progBar').style.width=pct.toFixed(2)+'%';
+  $('pDone').textContent=pct.toFixed(1)+'% done';
+  $('pDates').textContent=fmtD(en)+' → '+fmtD(ord);
+  const wk=Math.floor(left/7), mo=monthsBetween(t,ord);
+  const items=[['Days served',served],['Weeks left',wk],['Months left',mo.toFixed(1)],['Weekends left',countWeekends(t,ord)]];
+  $('stats').innerHTML=items.map(([k,v])=>`<div class="stat"><div class="k">${k}</div><div class="v mono">${typeof v==='number'?v.toLocaleString():v}</div></div>`).join('');
+  // milestones
+  const marks=[
+    {d:new Date(en.getTime()+Math.round(total*.25)*DAY),l:'25% done'},
+    {d:new Date(en.getTime()+Math.round(total/2)*DAY),l:'Halfway'},
+    {d:new Date(ord.getTime()-365*DAY),l:'1 year to go'},
+    {d:new Date(en.getTime()+Math.round(total*.75)*DAY),l:'75% done'},
+    {d:new Date(ord.getTime()-100*DAY),l:'100 days left'},
+    {d:new Date(ord.getTime()-30*DAY),l:'Last 30 days'},
+    {d:ord,l:'ORD'}
+  ].sort((a,b)=>a.d-b.d);
+  const next=marks.find(m=>m.d>t);
+  $('milestone').innerHTML=next?`<span style="font-size:20px">🏁</span><div><b>Next: ${next.l}</b><div class="note">${fmtD(next.d)} · in <span class="mono">${Math.round((next.d-t)/DAY)}</span> days</div></div>`:'<span>🎉</span><b>You made it.</b>';
+  // weeks grid
+  const totalW=Math.ceil(total/7), doneW=Math.floor(served/7);
+  $('weeks').innerHTML=Array.from({length:totalW},(_,i)=>`<i class="${i<doneW?'done':i===doneW?'now':''}" title="Week ${i+1}"></i>`).join('');
+  $('weeksMeta').textContent=`${Math.min(doneW,totalW)}/${totalW}`;
+  return {t,en,ord,mo,served};
+}
+
+function renderProjects(c){
+  const ps=[...st.projects].sort((a,b)=>b.date.localeCompare(a.date));
+  $('projects').innerHTML=ps.length?ps.map(p=>`<div class="item"><div class="grow"><div class="t">${esc(p.title)}</div><div class="m mono">${fmtD(parse(p.date))}</div></div>${p.link?`<a href="${esc(p.link)}" target="_blank" rel="noopener">Open ↗</a>`:''}<button class="del" data-proj="${p.id}" aria-label="Remove">×</button></div>`).join(''):'<div class="empty">Nothing shipped yet — add your first.</div>';
+  $('projMeta').textContent=ps.length;
+  const monthsIn=Math.max(.5,c.served/30.4375);
+  const rate=ps.length/monthsIn;
+  const proj=Math.round(ps.length+rate*c.mo);
+  $('paceNote').innerHTML=ps.length?`Pace: <b class="mono">${rate.toFixed(1)}</b>/month → on track for about <b class="mono">${proj}</b> projects by ORD.`:'';
+}
+function renderSkills(){
+  $('skills').innerHTML=st.skills.length?st.skills.map(s=>`<span class="tag" data-skill="${s.id}" role="button" tabindex="0" title="Tap to level up">${esc(s.name)}<span class="lvl">${[1,2,3].map(i=>`<i class="${i<=s.level?'on':''}"></i>`).join('')}</span><button data-del="${s.id}" aria-label="Remove">×</button></span>`).join(''):'<div class="empty">No skills logged yet.</div>';
+  $('skillMeta').textContent=st.skills.length;
+}
+function renderGoal(c){
+  const g=st.goal;
+  $('gTarget').value=g.target??'';$('gSaved').value=g.saved??'';$('gMonthly').value=g.monthly??'';
+  if(!g.target){$('gNow').style.width='0';$('gProj').style.width='0';$('gNowTxt').textContent='';$('gProjTxt').textContent='';$('gVerdict').innerHTML='<span class="note">Set a target to see if you\'ll hit it by ORD.</span>';$('goalMeta').textContent='';return}
+  const saved=g.saved||0, monthly=g.monthly||0;
+  const projected=saved+monthly*c.mo;
+  $('gNow').style.width=Math.min(100,saved/g.target*100)+'%';
+  $('gProj').style.width=Math.min(100,projected/g.target*100)+'%';
+  $('gNowTxt').textContent=money(saved)+' now';
+  $('gProjTxt').textContent=money(projected)+' by ORD';
+  $('goalMeta').textContent=Math.round(saved/g.target*100)+'%';
+  if(projected>=g.target){
+    const m=monthly>0?Math.ceil((g.target-saved)/monthly):0;
+    const hit=new Date(c.t);hit.setMonth(hit.getMonth()+m);
+    $('gVerdict').innerHTML=`<span style="color:var(--good);font-weight:700">On track</span> — you'd hit ${money(g.target)} around ${hit.toLocaleDateString(undefined,{month:'short',year:'numeric'})}.`;
+  }else{
+    const need=c.mo>0?(g.target-saved)/c.mo:0;
+    $('gVerdict').innerHTML=`<span style="color:var(--warn);font-weight:700">Short by ${money(g.target-projected)}</span> — you'd need about <b class="mono">${money(need)}</b>/month to make it.`;
+  }
+}
+function render(){const c=renderCountdown();renderProjects(c);renderSkills();renderGoal(c);$('enlist').value=st.enlist;$('ord').value=st.ord}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),1700)}
+
+$('projForm').addEventListener('submit',e=>{e.preventDefault();st.projects.push({id:uid(),title:$('pTitle').value.trim(),link:$('pLink').value.trim(),date:iso(new Date())});$('pTitle').value='';$('pLink').value='';save();render();toast('Shipped 🚀')});
+$('projects').addEventListener('click',e=>{const id=e.target.dataset.proj;if(id){st.projects=st.projects.filter(p=>p.id!==id);save();render()}});
+$('skillForm').addEventListener('submit',e=>{e.preventDefault();st.skills.push({id:uid(),name:$('sName').value.trim(),level:+$('sLevel').value});$('sName').value='';save();render();toast('Skill added')});
+$('skills').addEventListener('click',e=>{
+  const d=e.target.closest('[data-del]');if(d){st.skills=st.skills.filter(s=>s.id!==d.dataset.del);save();render();return}
+  const t=e.target.closest('[data-skill]');if(t){const s=st.skills.find(x=>x.id===t.dataset.skill);s.level=s.level%3+1;save();render()}
+});
+['gTarget','gSaved','gMonthly'].forEach(id=>$(id).addEventListener('input',()=>{
+  const v=x=>x===''?null:Math.max(0,+x);
+  st.goal={target:v($('gTarget').value),saved:v($('gSaved').value),monthly:v($('gMonthly').value)};save();
+  const c=renderCountdown();renderGoal(c);
+}));
+['enlist','ord'].forEach(id=>$(id).addEventListener('change',e=>{
+  const val=e.target.value;if(!val)return;
+  const next={...st,[id]:val};if(parse(next.ord)<=parse(next.enlist)){toast('ORD must be after enlistment');render();return}
+  st[id]=val;save();render();
+}));
+$('exportBtn').addEventListener('click',async()=>{const d=JSON.stringify(st);try{await navigator.clipboard.writeText(d);toast('Copied')}catch(e){$('io').style.display='block';$('io').value=d;$('io').select();toast('Copy the text below')}});
+$('importBtn').addEventListener('click',()=>{
+  const io=$('io');
+  if(io.style.display!=='block'||!io.value.trim()){io.style.display='block';io.value='';io.focus();return}
+  try{const d=JSON.parse(io.value);if(!d.ord||!Array.isArray(d.projects))throw 0;st=d;save();render();io.style.display='none';toast('Imported')}catch(e){toast('That doesn\'t look like exported data')}
+});
+$('resetBtn').addEventListener('click',()=>{st=JSON.parse(JSON.stringify(DEFAULT));save();render();toast('Reset')});
+render();
+})();
+</script>
+</body>
+</html>

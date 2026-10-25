@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IPPT Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f6f3; --surface:#ffffff; --surface-2:#eef1ec; --ink:#121512; --muted:#5f685f; --line:#dde2da;
+  --accent:#2f6b3a; --accent-ink:#ffffff; --accent-soft:#dcebdd;
+  --gold:#b98a12; --silver:#7b8590; --pass:#2f6b3a; --fail:#b0402f;
+  --c-push:#2f6b3a; --c-sit:#3a6ea5; --c-run:#c2662d;
+  --radius:18px; --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e110e; --surface:#161a16; --surface-2:#1d221d; --ink:#eef2ec; --muted:#9aa49a; --line:#2a312a;
+    --accent:#7fc48a; --accent-ink:#0e110e; --accent-soft:#1f3322;
+    --gold:#e2b440; --silver:#b2bcc6; --pass:#7fc48a; --fail:#ef7a66;
+    --c-push:#7fc48a; --c-sit:#7fb0e6; --c-run:#f0a067;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e110e; --surface:#161a16; --surface-2:#1d221d; --ink:#eef2ec; --muted:#9aa49a; --line:#2a312a;
+  --accent:#7fc48a; --accent-ink:#0e110e; --accent-soft:#1f3322;
+  --gold:#e2b440; --silver:#b2bcc6; --pass:#7fc48a; --fail:#ef7a66;
+  --c-push:#7fc48a; --c-sit:#7fb0e6; --c-run:#f0a067;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter Tight",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{padding:max(16px,env(safe-area-inset-top)) 16px 96px}
+.wrap{max-width:720px;margin:0 auto}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+header{display:flex;align-items:center;justify-content:space-between;margin:4px 0 18px}
+.brand{font-weight:800;letter-spacing:-.02em;font-size:20px}
+.brand span{color:var(--accent)}
+.chip{font-size:12px;font-weight:600;padding:6px 10px;border-radius:999px;background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+.hero{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+.ring{position:relative;width:132px;height:132px}
+.ring svg{transform:rotate(-90deg)}
+.ring .val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .num{font-size:40px;font-weight:800;letter-spacing:-.04em;line-height:1}
+.ring .of{font-size:12px;color:var(--muted);margin-top:2px}
+.award{display:inline-block;font-weight:700;font-size:13px;padding:5px 10px;border-radius:999px;margin-bottom:8px}
+.hero h2{margin:0 0 4px;font-size:15px;font-weight:600;color:var(--muted)}
+.hero p{margin:0;font-size:15px;line-height:1.45}
+.stations{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.st{background:var(--surface-2);border-radius:14px;padding:12px}
+.st .lbl{font-size:12px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%}
+.st .raw{font-size:20px;font-weight:700;margin-top:4px}
+.st .pts{font-size:12px;color:var(--muted)}
+.bar{height:5px;background:var(--line);border-radius:3px;margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 12px;font-weight:700}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px}
+input,select{width:100%;font:inherit;font-size:16px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.btn{appearance:none;border:0;font:inherit;font-weight:700;font-size:15px;padding:13px 16px;border-radius:12px;cursor:pointer;background:var(--accent);color:var(--accent-ink);width:100%}
+.btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line);width:auto;font-size:13px;padding:9px 12px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.gap{display:grid;gap:10px}
+.tip{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:12px;background:var(--accent-soft);margin-top:4px}
+.tip b{display:block;margin-bottom:2px}
+.tip p{margin:0;font-size:14px;line-height:1.45}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:8px;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:6px}
+#chart{width:100%;height:auto;display:block}
+.tabs{display:flex;gap:6px;background:var(--surface-2);padding:4px;border-radius:12px;margin-bottom:12px}
+.tabs button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:600;font-size:13px;padding:8px;border-radius:9px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:8px 6px;border-bottom:1px solid var(--line)}
+td{padding:10px 6px;border-bottom:1px solid var(--line)}
+td.r,th.r{text-align:right}
+.del{border:0;background:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px}
+.pbs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pb{border:1px solid var(--line);border-radius:14px;padding:12px}
+.pb .k{font-size:12px;color:var(--muted);font-weight:600}
+.pb .v{font-size:22px;font-weight:800;margin-top:2px}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+details summary{cursor:pointer;font-weight:600;font-size:14px}
+textarea{width:100%;min-height:90px;font-family:"JetBrains Mono",monospace;font-size:12px;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;transition:.25s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:480px){
+  .hero{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .stations,.pbs{grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .st{padding:10px}.st .raw{font-size:17px}
+  .pb .v{font-size:18px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">IPPT<span>/</span>trainer</div>
+    <div class="chip mono" id="countdown">—</div>
+  </header>
+
+  <section class="card">
+    <div class="hero">
+      <div class="ring">
+        <svg width="132" height="132" viewBox="0 0 132 132" aria-hidden="true">
+          <circle cx="66" cy="66" r="56" fill="none" stroke="var(--line)" stroke-width="12"/>
+          <circle id="ringArc" cx="66" cy="66" r="56" fill="none" stroke="var(--accent)" stroke-width="12" stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86" style="transition:stroke-dashoffset .6s ease"/>
+          <line id="ringGoal" x1="66" y1="4" x2="66" y2="22" stroke="var(--ink)" stroke-width="2" />
+        </svg>
+        <div class="val"><div class="num mono" id="totalNum">0</div><div class="of">est. points</div></div>
+      </div>
+      <div>
+        <div class="award" id="awardBadge">—</div>
+        <h2>Latest session</h2>
+        <p id="heroText">Log a session to see your score.</p>
+      </div>
+    </div>
+    <div class="stations" id="stations"></div>
+  </section>
+
+  <section class="card">
+    <h3>What gets you to target</h3>
+    <div id="gapTips" class="gap"></div>
+  </section>
+
+  <section class="card">
+    <h3>Log a session</h3>
+    <form id="logForm" class="gap">
+      <div class="grid2">
+        <div><label for="fDate">Date</label><input id="fDate" type="date" required></div>
+        <div><label for="fRun">2.4 km (mm:ss)</label><input id="fRun" inputmode="numeric" placeholder="e.g. 10:45" pattern="\d{1,2}:\d{2}"></div>
+      </div>
+      <div class="grid2">
+        <div><label for="fPush">Push-ups (1 min)</label><input id="fPush" type="number" min="0" max="120" inputmode="numeric" placeholder="reps"></div>
+        <div><label for="fSit">Sit-ups (1 min)</label><input id="fSit" type="number" min="0" max="120" inputmode="numeric" placeholder="reps"></div>
+      </div>
+      <button class="btn" type="submit">Save session</button>
+      <div class="note">Leave a station blank if you didn't test it — the score uses your most recent value for that station.</div>
+    </form>
+  </section>
+
+  <section class="card">
+    <h3>Progress</h3>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-view="total" aria-selected="true">Total</button>
+      <button role="tab" data-view="push" aria-selected="false">Push-ups</button>
+      <button role="tab" data-view="sit" aria-selected="false">Sit-ups</button>
+      <button role="tab" data-view="run" aria-selected="false">2.4 km</button>
+    </div>
+    <div class="legend" id="legend"></div>
+    <svg id="chart" viewBox="0 0 640 240" role="img" aria-label="Progress chart"></svg>
+  </section>
+
+  <section class="card">
+    <h3>Personal bests</h3>
+    <div class="pbs" id="pbs"></div>
+  </section>
+
+  <section class="card">
+    <h3>History</h3>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Date</th><th class="r">Push</th><th class="r">Sit</th><th class="r">2.4 km</th><th class="r">Pts</th><th></th></tr></thead>
+      <tbody id="hist"></tbody>
+    </table></div>
+  </section>
+
+  <section class="card gap">
+    <h3>Settings</h3>
+    <div class="grid2">
+      <div><label for="sTarget">Target</label>
+        <select id="sTarget">
+          <option value="85">Gold (85+)</option>
+          <option value="90">Gold Cdo/Gds (90+)</option>
+          <option value="75">Silver (75+)</option>
+          <option value="61">Pass (61+)</option>
+        </select></div>
+      <div><label for="sTest">Next IPPT date</label><input id="sTest" type="date"></div>
+    </div>
+    <details>
+      <summary>Scoring table (edit to match your official sheet)</summary>
+      <p class="note">Points are <b>estimates</b> interpolated from the anchor points below. Known anchors for age group 1 (under 22): 60 push-ups = 25, 60 sit-ups = 25, 8:30 run = 50, 40 push-ups = 20. Others are rough guesses — replace them with values from the official CMPB/OneNS scoring sheet for your age group. Format: <span class="mono">value:points</span>, comma-separated (run in seconds).</p>
+      <label for="tPush">Push-ups</label><textarea id="tPush"></textarea>
+      <label for="tSit">Sit-ups</label><textarea id="tSit"></textarea>
+      <label for="tRun">2.4 km (seconds:points)</label><textarea id="tRun"></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn ghost" id="saveTable" type="button">Apply table</button><button class="btn ghost" id="resetTable" type="button">Reset to defaults</button></div>
+    </details>
+    <div class="row">
+      <button class="btn ghost" id="exportBtn" type="button">Export data</button>
+      <button class="btn ghost" id="importBtn" type="button">Import data</button>
+      <button class="btn ghost" id="sampleBtn" type="button">Load sample data</button>
+      <button class="btn ghost" id="clearBtn" type="button">Clear all</button>
+    </div>
+    <p class="note">Data stays on this device's browser. Export to back it up or move it between phone and PC.</p>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+const KEY = 'ippt-trainer-v1';
+const DEFAULT_TABLE = {
+  push: [[15,1],[20,6],[25,11],[30,15],[35,18],[40,20],[45,22],[50,23],[55,24],[60,25]],
+  sit:  [[15,1],[20,6],[25,11],[30,15],[35,18],[40,20],[45,22],[50,23],[55,24],[60,25]],
+  run:  [[510,50],[540,48],[600,44],[660,38],[720,32],[780,26],[840,20],[900,14],[960,8],[1020,1],[1021,0]]
+};
+const AWARDS = [
+  {min:90, label:'Gold (Cdo/Gds)', color:'var(--gold)'},
+  {min:85, label:'Gold', color:'var(--gold)'},
+  {min:75, label:'Silver', color:'var(--silver)'},
+  {min:61, label:'Pass', color:'var(--pass)'},
+  {min:0,  label:'Below pass', color:'var(--fail)'}
+];
+const COLORS = {push:'var(--c-push)', sit:'var(--c-sit)', run:'var(--c-run)', total:'var(--accent)'};
+
+function today(off=0){const d=new Date();d.setDate(d.getDate()+off);return d.toISOString().slice(0,10)}
+function sample(){
+  const s=[]; const base=[[22,28,'12:40'],[25,30,'12:15'],[27,33,'11:58'],[30,35,'11:40'],[31,38,'11:22'],[34,40,'11:05'],[36,41,'10:52'],[38,44,'10:38']];
+  base.forEach((b,i)=>s.push({id:crypto.randomUUID?crypto.randomUUID():String(Math.random()),date:today(-7*(base.length-1-i)),push:b[0],sit:b[1],run:toSec(b[2])}));
+  return s;
+}
+function load(){
+  try{const raw=localStorage.getItem(KEY); if(raw) return JSON.parse(raw);}catch(e){}
+  return {sessions:sample(), target:85, testDate:today(42), table:JSON.parse(JSON.stringify(DEFAULT_TABLE)), sample:true};
+}
+let state=load();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+
+function toSec(s){if(!s)return null;const m=String(s).trim().match(/^(\d{1,2}):(\d{2})$/);return m?(+m[1])*60+(+m[2]):null}
+function fmt(sec){if(sec==null)return '—';const m=Math.floor(sec/60),s=Math.round(sec%60);return m+':'+String(s).padStart(2,'0')}
+
+function interp(tbl,x,higherBetter){
+  if(x==null) return null;
+  const t=[...tbl].sort((a,b)=>a[0]-b[0]);
+  if(higherBetter){
+    if(x<t[0][0]) return 0;
+    if(x>=t[t.length-1][0]) return t[t.length-1][1];
+  }else{
+    if(x<=t[0][0]) return t[0][1];
+    if(x>=t[t.length-1][0]) return t[t.length-1][1];
+  }
+  for(let i=0;i<t.length-1;i++){
+    const [x0,y0]=t[i],[x1,y1]=t[i+1];
+    if(x>=x0&&x<=x1){
+      const v=y0+(y1-y0)*(x-x0)/(x1-x0);
+      return higherBetter?Math.floor(v):Math.floor(v); // conservative: round down
+    }
+  }
+  return 0;
+}
+const ptsPush=v=>interp(state.table.push,v,true);
+const ptsSit=v=>interp(state.table.sit,v,true);
+const ptsRun=v=>interp(state.table.run,v,false);
+
+function sorted(){return [...state.sessions].sort((a,b)=>a.date.localeCompare(b.date))}
+// rolling "current": latest value per station up to each session
+function rolling(){
+  const out=[];let p=null,s=null,r=null;
+  for(const x of sorted()){
+    if(x.push!=null)p=x.push; if(x.sit!=null)s=x.sit; if(x.run!=null)r=x.run;
+    const pp=ptsPush(p),sp=ptsSit(s),rp=ptsRun(r);
+    out.push({...x,cp:p,cs:s,cr:r,pp,sp,rp,total:(pp||0)+(sp||0)+(rp||0),complete:p!=null&&s!=null&&r!=null});
+  }
+  return out;
+}
+function award(t){return AWARDS.find(a=>t>=a.min)}
+
+function renderHero(roll){
+  const last=roll[roll.length-1];
+  const total=last?last.total:0;
+  const C=351.86;
+  document.getElementById('ringArc').style.strokeDashoffset=C*(1-Math.min(total,100)/100);
+  // goal tick
+  const ang=(state.target/100)*2*Math.PI; const g=document.getElementById('ringGoal');
+  const cx=66,cy=66,r1=48,r2=64;
+  g.setAttribute('x1',cx+r1*Math.cos(ang));g.setAttribute('y1',cy+r1*Math.sin(ang));
+  g.setAttribute('x2',cx+r2*Math.cos(ang));g.setAttribute('y2',cy+r2*Math.sin(ang));
+  document.getElementById('totalNum').textContent=total;
+  const a=award(total);const b=document.getElementById('awardBadge');
+  b.textContent=a.label;b.style.background='color-mix(in srgb, '+a.color+' 18%, transparent)';b.style.color=a.color;
+  const diff=state.target-total;
+  document.getElementById('heroText').innerHTML=last
+    ? (diff>0?`<b class="mono">${diff}</b> pts to your ${labelFor(state.target)} target.`:`On target for ${labelFor(state.target)} — hold it.`)+(last.complete?'':' <span class="note">(some stations not tested yet)</span>')
+    : 'Log a session to see your score.';
+  const st=[['push','Push-ups',last?.cp,last?.pp,25,v=>v??'—'],['sit','Sit-ups',last?.cs,last?.sp,25,v=>v??'—'],['run','2.4 km',last?.cr,last?.rp,50,fmt]];
+  document.getElementById('stations').innerHTML=st.map(([k,l,raw,p,max,f])=>`
+    <div class="st"><div class="lbl"><span class="dot" style="background:${COLORS[k]}"></span>${l}</div>
+    <div class="raw mono">${f(raw)}</div><div class="pts mono">${p??0}/${max} pts</div>
+    <div class="bar"><i style="width:${((p||0)/max*100).toFixed(0)}%;background:${COLORS[k]}"></i></div></div>`).join('');
+}
+function labelFor(t){return {90:'Gold (Cdo/Gds)',85:'Gold',75:'Silver',61:'Pass'}[t]||t+' pts'}
+
+function renderGap(roll){
+  const el=document.getElementById('gapTips');const last=roll[roll.length-1];
+  if(!last){el.innerHTML='<p class="note">Log a session first.</p>';return}
+  const need=state.target-last.total;
+  if(need<=0){el.innerHTML=`<div class="tip"><div>✅</div><div><b>You're there.</b><p>Keep 2 maintenance sessions a week and retest a week before IPPT.</p></div></div>`;return}
+  // smallest change per station to gain `need` points alone, and +1..3 pt steps
+  const opts=[];
+  const find=(kind)=>{
+    const cur=kind==='push'?last.cp:kind==='sit'?last.cs:last.cr;
+    if(cur==null) return null;
+    const fn=kind==='push'?ptsPush:kind==='sit'?ptsSit:ptsRun;
+    const base=fn(cur);
+    let step=null,full=null;
+    if(kind==='run'){
+      for(let s=cur-1;s>=420;s--){const g=fn(s)-base; if(g>=1&&step==null)step={d:cur-s,g}; if(g>=need){full={d:cur-s};break}}
+    }else{
+      for(let r=cur+1;r<=80;r++){const g=fn(r)-base; if(g>=1&&step==null)step={d:r-cur,g}; if(g>=need){full={d:r-cur};break}}
+    }
+    return {kind,step,full,base};
+  };
+  ['run','push','sit'].forEach(k=>{const o=find(k);if(o)opts.push(o)});
+  const name={push:'push-ups',sit:'sit-ups',run:'2.4 km'};
+  const unit=(k,d)=>k==='run'?`${d}s faster`:`+${d} reps`;
+  // best value: points gained per unit effort (rough: 1 rep ≈ 3s run)
+  const rank=opts.filter(o=>o.step).map(o=>({...o,eff:o.step.g/(o.kind==='run'?o.step.d/3:o.step.d)})).sort((a,b)=>b.eff-a.eff);
+  let html='';
+  if(rank[0]){const o=rank[0];html+=`<div class="tip"><div>🎯</div><div><b>Cheapest next point: ${name[o.kind]}</b><p>${unit(o.kind,o.step.d)} gets you +${o.step.g} pt${o.step.g>1?'s':''}. You need <span class="mono">${need}</span> in total.</p></div></div>`}
+  const fulls=opts.filter(o=>o.full).map(o=>`<li>${name[o.kind]} alone: <b class="mono">${unit(o.kind,o.full.d)}</b></li>`).join('');
+  if(fulls) html+=`<div class="note"><b>To close the whole gap with one station:</b><ul style="margin:6px 0 0;padding-left:18px">${fulls}</ul></div>`;
+  const missing=['push','sit','run'].filter(k=>(k==='push'?last.cp:k==='sit'?last.cs:last.cr)==null);
+  if(missing.length) html+=`<p class="note">Not tested yet: ${missing.map(k=>name[k]).join(', ')}.</p>`;
+  el.innerHTML=html||'<p class="note">At max for every tested station.</p>';
+}
+
+let view='total';
+function renderChart(roll){
+  const svg=document.getElementById('chart');const W=640,H=240,P={l:40,r:14,t:14,b:28};
+  const pts=roll.map(r=>({date:r.date,v:view==='total'?r.total:view==='push'?r.cp:view==='sit'?r.cs:r.cr})).filter(p=>p.v!=null);
+  const leg=document.getElementById('legend');
+  if(pts.length<1){svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle" fill="var(--muted)" font-size="14">No data yet</text>`;leg.innerHTML='';return}
+  const isRun=view==='run';
+  let vals=pts.map(p=>p.v);
+  let lo,hi;
+  if(view==='total'){lo=Math.min(40,...vals,state.target-10);hi=100}
+  else if(isRun){lo=Math.min(...vals)-30;hi=Math.max(...vals)+30}
+  else{lo=Math.max(0,Math.min(...vals)-5);hi=Math.max(60,...vals)+2}
+  const t0=new Date(pts[0].date).getTime(),t1=new Date(pts[pts.length-1].date).getTime()||t0+1;
+  const X=d=>P.l+(pts.length===1?(W-P.l-P.r)/2:(new Date(d).getTime()-t0)/((t1-t0)||1)*(W-P.l-P.r));
+  // for run, lower is better -> invert so up = better
+  const Y=v=>isRun? P.t+(v-lo)/(hi-lo)*(H-P.t-P.b) : H-P.b-(v-lo)/(hi-lo)*(H-P.t-P.b);
+  let g='';
+  const ticks=4;for(let i=0;i<=ticks;i++){const v=lo+(hi-lo)*i/ticks;const y=Y(v);
+    g+=`<line x1="${P.l}" x2="${W-P.r}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${P.l-8}" y="${y+4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="JetBrains Mono">${isRun?fmt(v):Math.round(v)}</text>`}
+  // reference line
+  let ref=null,refLabel='';
+  if(view==='total'){ref=state.target;refLabel=labelFor(state.target)}
+  else if(view==='run'){ref=510;refLabel='max 8:30'}
+  else{ref=60;refLabel='max 60'}
+  if(ref>=Math.min(lo,hi)&&ref<=Math.max(lo,hi)){const y=Y(ref);g+=`<line x1="${P.l}" x2="${W-P.r}" y1="${y}" y2="${y}" stroke="var(--ink)" stroke-dasharray="4 4" opacity=".5"/><text x="${W-P.r}" y="${y-6}" text-anchor="end" font-size="11" fill="var(--muted)">${refLabel}</text>`}
+  const path=pts.map((p,i)=>(i?'L':'M')+X(p.date).toFixed(1)+' '+Y(p.v).toFixed(1)).join(' ');
+  const c=COLORS[view];
+  const area=path+` L${X(pts[pts.length-1].date).toFixed(1)} ${H-P.b} L${X(pts[0].date).toFixed(1)} ${H-P.b} Z`;
+  g+=`<path d="${area}" fill="${c}" opacity=".08"/><path d="${path}" fill="none" stroke="${c}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  pts.forEach((p,i)=>{g+=`<circle cx="${X(p.date)}" cy="${Y(p.v)}" r="${i===pts.length-1?5:3.5}" fill="var(--surface)" stroke="${c}" stroke-width="2"><title>${p.date}: ${isRun?fmt(p.v):p.v}</title></circle>`});
+  const last=pts[pts.length-1];
+  g+=`<text x="${Math.min(X(last.date),W-P.r-4)}" y="${Y(last.v)-12}" text-anchor="end" font-size="12" font-weight="700" fill="var(--ink)" font-family="JetBrains Mono">${isRun?fmt(last.v):last.v}</text>`;
+  // x labels
+  const fmtD=d=>new Date(d).toLocaleDateString(undefined,{day:'numeric',month:'short'});
+  g+=`<text x="${X(pts[0].date)}" y="${H-8}" font-size="11" fill="var(--muted)" text-anchor="start">${fmtD(pts[0].date)}</text>`;
+  if(pts.length>1)g+=`<text x="${X(last.date)}" y="${H-8}" font-size="11" fill="var(--muted)" text-anchor="end">${fmtD(last.date)}</text>`;
+  svg.innerHTML=g;
+  leg.innerHTML=`<span><i class="dot" style="background:${c}"></i>${view==='total'?'Estimated total (latest value per station)':view==='run'?'2.4 km time — up is faster':view==='push'?'Push-up reps':'Sit-up reps'}</span>`;
+}
+
+function renderPB(){
+  const s=state.sessions;
+  const bp=Math.max(...s.map(x=>x.push??-1));const bs=Math.max(...s.map(x=>x.sit??-1));
+  const runs=s.map(x=>x.run).filter(x=>x!=null);const br=runs.length?Math.min(...runs):null;
+  const items=[['Push-ups',bp>=0?bp:'—'],['Sit-ups',bs>=0?bs:'—'],['2.4 km',fmt(br)]];
+  document.getElementById('pbs').innerHTML=items.map(([k,v])=>`<div class="pb"><div class="k">${k}</div><div class="v mono">${v}</div></div>`).join('');
+}
+function renderHist(roll){
+  document.getElementById('hist').innerHTML=[...roll].reverse().map(r=>`<tr>
+    <td>${new Date(r.date).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'2-digit'})}</td>
+    <td class="r mono">${r.push??'—'}</td><td class="r mono">${r.sit??'—'}</td><td class="r mono">${fmt(r.run)}</td>
+    <td class="r mono"><b>${r.total}</b></td><td class="r"><button class="del" data-id="${r.id}" aria-label="Delete">×</button></td></tr>`).join('')
+    || '<tr><td colspan="6" class="note">No sessions yet.</td></tr>';
+}
+function renderCountdown(){
+  const el=document.getElementById('countdown');
+  if(!state.testDate){el.textContent='Set IPPT date';return}
+  const d=Math.ceil((new Date(state.testDate)-new Date(today()))/86400000);
+  el.textContent=d>0?`${d} days to IPPT`:d===0?'IPPT today':'IPPT done';
+}
+function tableText(t){return t.map(([a,b])=>a+':'+b).join(', ')}
+function parseTable(s){const arr=s.split(',').map(x=>x.trim()).filter(Boolean).map(x=>x.split(':').map(Number));if(arr.length<2||arr.some(a=>a.length!==2||a.some(isNaN)))throw new Error('bad');return arr}
+function renderSettings(){
+  document.getElementById('sTarget').value=String(state.target);
+  document.getElementById('sTest').value=state.testDate||'';
+  document.getElementById('tPush').value=tableText(state.table.push);
+  document.getElementById('tSit').value=tableText(state.table.sit);
+  document.getElementById('tRun').value=tableText(state.table.run);
+}
+function render(){const roll=rolling();renderHero(roll);renderGap(roll);renderChart(roll);renderPB();renderHist(roll);renderCountdown()}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),1800)}
+
+// events
+document.getElementById('fDate').value=today();
+document.getElementById('logForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const date=document.getElementById('fDate').value;
+  const pv=document.getElementById('fPush').value,sv=document.getElementById('fSit').value,rv=document.getElementById('fRun').value;
+  const run=rv?toSec(rv):null;
+  if(rv&&run==null){toast('Run time should look like 10:45');return}
+  if(!pv&&!sv&&!rv){toast('Enter at least one station');return}
+  if(state.sample){state.sessions=[];state.sample=false}
+  state.sessions.push({id:String(Date.now())+Math.random(),date,push:pv===''?null:+pv,sit:sv===''?null:+sv,run});
+  save();render();
+  ['fPush','fSit','fRun'].forEach(id=>document.getElementById(id).value='');
+  toast(state.sessions.length===1?'Saved — sample data cleared':'Session saved');
+});
+document.getElementById('hist').addEventListener('click',e=>{
+  const id=e.target.dataset?.id;if(!id)return;
+  state.sessions=state.sessions.filter(s=>s.id!==id);save();render();toast('Deleted');
+});
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+  view=b.dataset.view;document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));renderChart(rolling());
+}));
+document.getElementById('sTarget').addEventListener('change',e=>{state.target=+e.target.value;save();render()});
+document.getElementById('sTest').addEventListener('change',e=>{state.testDate=e.target.value;save();render()});
+document.getElementById('saveTable').addEventListener('click',()=>{
+  try{state.table={push:parseTable(tPush.value),sit:parseTable(tSit.value),run:parseTable(tRun.value)};save();render();toast('Scoring table applied')}
+  catch(e){toast('Check the format: value:points, …')}
+});
+document.getElementById('resetTable').addEventListener('click',()=>{state.table=JSON.parse(JSON.stringify(DEFAULT_TABLE));save();renderSettings();render();toast('Reset')});
+document.getElementById('exportBtn').addEventListener('click',async()=>{
+  const data=JSON.stringify(state);
+  try{await navigator.clipboard.writeText(data);toast('Copied to clipboard')}
+  catch(e){const b=new Blob([data],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='ippt-data.json';a.click();}
+});
+document.getElementById('importBtn').addEventListener('click',()=>{
+  const txt=window.prompt?null:null; // avoid blocking dialogs; use file picker
+  const inp=document.createElement('input');inp.type='file';inp.accept='application/json,.json';
+  inp.onchange=async()=>{try{const d=JSON.parse(await inp.files[0].text());if(!Array.isArray(d.sessions))throw 0;state=d;save();renderSettings();render();toast('Imported')}catch(e){toast('Not a valid export file')}};
+  inp.click();
+});
+document.getElementById('sampleBtn').addEventListener('click',()=>{state.sessions=sample();state.sample=true;save();render();toast('Sample data loaded')});
+document.getElementById('clearBtn').addEventListener('click',()=>{state.sessions=[];state.sample=false;save();render();toast('Cleared')});
+
+renderSettings();render();
+})();
+</script>
+</body>
+</html>
