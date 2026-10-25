@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chop Invoice</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: editor column + paper invoice sheet beside it (stacks on phone); full-screen QR for counter use */
+:root{
+  --bg:#eef0f4; --surface:#ffffff; --surface-2:#f4f5f8; --ink:#14171f; --muted:#5d6473; --line:#dadde5;
+  --accent:#2b44b8; --accent-ink:#ffffff; --accent-soft:#e2e7fb;
+  --stamp:#c8372d; --good:#237a4b; --warn:#a86400;
+  --paper:#ffffff; --paper-ink:#14171f; --paper-muted:#636a78; --paper-line:#e3e5ea; --paper-accent:#2b44b8;
+  --f-display:"Bricolage Grotesque",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1218; --surface:#171b23; --surface-2:#1e232d; --ink:#e9ecf2; --muted:#98a0b0; --line:#2b313d;
+    --accent:#8ea2ff; --accent-ink:#0f1218; --accent-soft:#232b4a;
+    --stamp:#ff7a6e; --good:#6fd39a; --warn:#f0b24a; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1218; --surface:#171b23; --surface-2:#1e232d; --ink:#e9ecf2; --muted:#98a0b0; --line:#2b313d;
+  --accent:#8ea2ff; --accent-ink:#0f1218; --accent-soft:#232b4a;
+  --stamp:#ff7a6e; --good:#6fd39a; --warn:#f0b24a; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 64px}
+.wrap{max-width:1080px;margin:0 auto}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:4px 0 16px}
+.brand{font-family:var(--f-display);font-weight:800;font-size:24px;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+.brand .chop{width:30px;height:30px;border:2.5px solid var(--stamp);color:var(--stamp);border-radius:7px;display:grid;place-items:center;font-size:13px;transform:rotate(-8deg);font-family:var(--f-mono);font-weight:600}
+.seg{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+.seg button{border:0;background:none;font:inherit;font-weight:600;font-size:14px;color:var(--muted);padding:8px 14px;border-radius:9px;cursor:pointer}
+.seg button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.banner{display:flex;gap:10px;align-items:flex-start;background:var(--accent-soft);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-size:14px}
+.banner b{font-weight:600}
+.banner button{margin-left:auto;flex:none}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+h2{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0 0 12px;text-wrap:balance;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+h2 small{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-weight:500}
+label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;letter-spacing:.02em}
+input,select,textarea{font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);width:100%;min-width:0}
+textarea{resize:vertical;min-height:64px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.f{display:grid;gap:12px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.check{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);font-weight:500;margin:0}
+.check input{width:18px;height:18px}
+.btn{border:0;font:inherit;font-weight:600;font-size:14px;padding:11px 16px;border-radius:10px;cursor:pointer;background:var(--accent);color:var(--accent-ink);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+.btn.small{padding:7px 11px;font-size:13px}
+.btn.big{font-size:17px;padding:15px 18px;width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.note{font-size:12.5px;color:var(--muted)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.sticky{position:sticky;top:12px;display:grid;gap:12px}
+
+/* items editor */
+.items{display:grid;gap:8px}
+.it{display:grid;grid-template-columns:minmax(0,1fr) 64px 96px 32px;gap:6px;align-items:center}
+.it.head{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.it input{padding:9px 10px}
+.x{border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer;padding:0;line-height:1;width:32px;height:32px;border-radius:8px}
+.x:hover{background:var(--surface-2)}
+.tot{display:grid;gap:4px;margin-top:4px;font-size:14px}
+.tot div{display:flex;justify-content:space-between}
+.tot .grand{font-weight:600;font-size:16px}
+
+/* paper invoice */
+.sheet{background:var(--paper);color:var(--paper-ink);border-radius:6px;padding:26px 24px;box-shadow:0 1px 2px rgba(0,0,0,.06),0 10px 30px rgba(20,23,31,.10);position:relative;overflow:hidden;font-size:13.5px}
+.sheet .top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.sheet .bizname{font-family:var(--f-display);font-weight:800;font-size:21px;letter-spacing:-.01em;line-height:1.15}
+.sheet .meta{color:var(--paper-muted);font-size:12.5px;white-space:pre-line;margin-top:4px}
+.sheet .doc{text-align:right}
+.sheet .doc .t{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;color:var(--paper-muted)}
+.sheet .doc .n{font-family:var(--f-mono);font-weight:600;font-size:15px}
+.sheet .parties{display:grid;grid-template-columns:1fr auto;gap:12px;margin:20px 0 14px;padding-top:14px;border-top:1px solid var(--paper-line)}
+.sheet .lbl{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;color:var(--paper-muted);text-transform:uppercase}
+.sheet table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.sheet th{font-family:var(--f-mono);font-weight:500;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--paper-muted);text-align:left;padding:8px 0;border-bottom:1px solid var(--paper-line)}
+.sheet td{padding:9px 0;border-bottom:1px solid var(--paper-line);vertical-align:top}
+.sheet .r{text-align:right}
+.sheet .sum{margin-left:auto;width:min(240px,100%);display:grid;gap:4px;margin-top:10px}
+.sheet .sum div{display:flex;justify-content:space-between}
+.sheet .sum .grand{font-weight:600;font-size:16px;border-top:2px solid var(--paper-ink);padding-top:6px;margin-top:4px}
+.sheet .pay{display:flex;gap:16px;align-items:center;margin-top:20px;padding:14px;border:1px dashed var(--paper-line);border-radius:8px}
+.sheet .pay img{width:132px;height:132px;image-rendering:pixelated;flex:none}
+.sheet .pay .how{font-size:13px;min-width:0}
+.sheet .pay .how b{display:block;font-family:var(--f-display);font-size:15px;margin-bottom:4px}
+.sheet .notes{margin-top:14px;color:var(--paper-muted);font-size:12.5px;white-space:pre-line}
+.paid-chop{position:absolute;top:84px;right:24px;transform:rotate(-14deg);border:3px solid var(--stamp);color:var(--stamp);font-family:var(--f-mono);font-weight:600;font-size:22px;letter-spacing:.12em;padding:4px 14px;border-radius:8px;opacity:.85;pointer-events:none}
+.qrfail{width:132px;height:132px;display:grid;place-items:center;text-align:center;font-size:11px;color:var(--paper-muted);border:1px solid var(--paper-line);border-radius:6px;padding:8px;flex:none}
+
+/* quick charge */
+.amount{font-family:var(--f-mono);font-size:44px;font-weight:600;padding:12px 14px;text-align:right}
+.amtwrap{position:relative}
+.amtwrap span{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-family:var(--f-mono);font-size:22px;color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:inherit;font-family:var(--f-mono);font-size:14px;padding:7px 12px;border-radius:999px;cursor:pointer}
+
+/* full-screen QR */
+.overlay{position:fixed;inset:0;background:var(--paper);color:var(--paper-ink);z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;
+  padding:max(20px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px))}
+.overlay .who{font-family:var(--f-display);font-weight:800;font-size:22px}
+.overlay .amt{font-family:var(--f-mono);font-weight:600;font-size:40px;line-height:1}
+.overlay img{width:min(72vw,340px);height:auto;max-width:100%;image-rendering:pixelated}
+.overlay .ref{font-family:var(--f-mono);font-size:13px;color:var(--paper-muted)}
+.overlay .row{justify-content:center}
+
+/* history */
+.hist{display:grid;gap:8px}
+.h{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px}
+.h .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.h .m{font-size:12.5px;color:var(--muted)}
+.pill{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;border:1.5px solid currentColor;cursor:pointer;background:none;font-family:inherit}
+.pill.paid{color:var(--good)} .pill.unpaid{color:var(--muted)} .pill.overdue{color:var(--stamp)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.kpi{background:var(--surface-2);border-radius:12px;padding:12px}
+.kpi .k{font-size:12px;color:var(--muted);font-weight:600}
+.kpi .v{font-family:var(--f-mono);font-size:19px;font-weight:600;margin-top:2px}
+.empty{color:var(--muted);font-size:14px;padding:8px 0}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(16px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;transition:.2s;pointer-events:none;z-index:60}
+.toast.show{opacity:1;transform:translateX(-50%)}
+footer{margin-top:28px;font-size:12px;color:var(--muted);text-align:center}
+
+@media (max-width:820px){ .cols{grid-template-columns:minmax(0,1fr)} .sticky{position:static} }
+@media (max-width:520px){
+  .g2,.g3{grid-template-columns:1fr 1fr}
+  .g3>:last-child{grid-column:1/-1}
+  .it{grid-template-columns:minmax(0,1fr) 52px 84px 28px}
+  .sheet{padding:20px 16px}
+  .sheet .pay{flex-direction:column;align-items:flex-start}
+  .kpis{grid-template-columns:1fr 1fr}
+  .seg button{padding:8px 10px}
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+@media print{
+  body{background:#fff;padding:0}
+  header,.banner,.editor,.actions,footer,.toast,[data-view]:not(#vInvoice){display:none!important}
+  .cols{display:block}
+  .sheet{box-shadow:none;border-radius:0;padding:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header>
+    <div class="brand"><span class="chop">印</span>Chop Invoice</div>
+    <div class="seg" role="tablist" id="tabs">
+      <button role="tab" data-tab="charge">Quick charge</button>
+      <button role="tab" data-tab="invoice">Invoice</button>
+      <button role="tab" data-tab="history">History</button>
+      <button role="tab" data-tab="business">My business</button>
+    </div>
+  </header>
+
+  <div class="banner" id="sampleBanner" hidden>
+    <div><b>You're looking at example details.</b> The PayNow number below is a placeholder. Set your own in My business before a customer scans anything.</div>
+    <button class="btn small" type="button" data-goto="business">Set up</button>
+  </div>
+
+  <!-- QUICK CHARGE -->
+  <section data-view="charge" id="vCharge" hidden>
+    <div class="cols">
+      <div class="card f">
+        <h2>Charge a customer <small>fixed-amount QR</small></h2>
+        <div>
+          <label for="qAmt">Amount</label>
+          <div class="amtwrap"><span>S$</span><input id="qAmt" class="amount" inputmode="decimal" placeholder="0.00" autocomplete="off"></div>
+        </div>
+        <div class="chips" id="qChips"></div>
+        <div>
+          <label for="qRef">Reference (optional)</label>
+          <input id="qRef" maxlength="25" placeholder="e.g. Table 7, Order 112">
+        </div>
+        <button class="btn big" type="button" id="qShow">Show QR to customer</button>
+        <p class="note">The customer scans with any Singapore banking app. The amount is locked, so they can't change it.</p>
+      </div>
+      <div class="card">
+        <h2>Today <small class="mono" id="qTodayMeta"></small></h2>
+        <div class="hist" id="qToday"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INVOICE -->
+  <section data-view="invoice" id="vInvoice" hidden>
+    <div class="cols">
+      <div class="card f editor">
+        <h2>Invoice details <small class="mono" id="iState"></small></h2>
+        <div class="g3">
+          <div><label for="iNo">Invoice no.</label><input id="iNo" class="mono"></div>
+          <div><label for="iDate">Date</label><input id="iDate" type="date"></div>
+          <div><label for="iDue">Due</label><input id="iDue" type="date"></div>
+        </div>
+        <div class="g2">
+          <div><label for="iCust">Bill to</label><input id="iCust" placeholder="Customer or company"></div>
+          <div><label for="iCustC">Their contact</label><input id="iCustC" placeholder="Phone, email or address"></div>
+        </div>
+        <div>
+          <label>Items</label>
+          <div class="items" id="items"></div>
+          <div class="row" style="margin-top:8px"><button class="btn ghost small" type="button" id="addItem">+ Add item</button></div>
+        </div>
+        <div class="tot mono" id="edTot"></div>
+        <div><label for="iNotes">Notes</label><textarea id="iNotes" placeholder="Payment terms, thank-you note, bank details"></textarea></div>
+      </div>
+      <div class="sticky">
+        <div id="sheetHost"></div>
+        <div class="card f actions">
+          <div class="row">
+            <button class="btn" type="button" id="iSave">Save to history</button>
+            <button class="btn ghost" type="button" id="iCopyMsg">Copy WhatsApp message</button>
+            <a class="btn ghost" id="iWa" href="#" target="_blank" rel="noopener">Open WhatsApp</a>
+          </div>
+          <div class="row">
+            <button class="btn ghost" type="button" id="iLink" data-standalone>Copy customer link</button>
+            <button class="btn ghost" type="button" id="iPrint" data-standalone>Print / save PDF</button>
+            <button class="btn ghost" type="button" id="iPaid">Mark paid</button>
+            <button class="btn ghost" type="button" id="iNew">New invoice</button>
+          </div>
+          <p class="note" id="framedNote" hidden>Printing and customer links work when you open this file directly or from GitHub Pages.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section data-view="history" id="vHistory" hidden>
+    <div class="card">
+      <h2>History <small class="mono" id="hMeta"></small></h2>
+      <div class="kpis" id="kpis"></div>
+      <div class="hist" id="hist"></div>
+      <p class="note">Tap the status to switch between paid and unpaid. Tap an invoice to open it.</p>
+    </div>
+  </section>
+
+  <!-- BUSINESS -->
+  <section data-view="business" id="vBusiness" hidden>
+    <div class="cols">
+      <div class="card f">
+        <h2>My business</h2>
+        <div><label for="bName">Business name (shown on QR, max 25 letters)</label><input id="bName" maxlength="60"></div>
+        <div class="g2">
+          <div><label for="bType">PayNow to</label>
+            <select id="bType"><option value="mobile">Mobile number</option><option value="uen">UEN (registered business)</option></select></div>
+          <div><label for="bProxy" id="bProxyL">PayNow number</label><input id="bProxy" class="mono" autocomplete="off"></div>
+        </div>
+        <p class="note" id="bProxyHint"></p>
+        <div><label for="bMeta">Address and contact (printed on invoice)</label><textarea id="bMeta" placeholder="Blk 123 Ang Mo Kio Ave 3 #01-45&#10;9123 4567"></textarea></div>
+        <div class="g3">
+          <div><label for="bPrefix">Invoice prefix</label><input id="bPrefix" class="mono" maxlength="8"></div>
+          <div><label for="bTerms">Pay within (days)</label><input id="bTerms" type="number" min="0" inputmode="numeric"></div>
+          <div><label for="bChips">Quick amounts</label><input id="bChips" class="mono" placeholder="3.5, 5, 10"></div>
+        </div>
+        <label class="check"><input type="checkbox" id="bGst"> GST-registered (adds 9% GST)</label>
+        <div id="gstRow"><label for="bGstNo">GST reg. no.</label><input id="bGstNo" class="mono"></div>
+      </div>
+      <div class="card f">
+        <h2>Test your QR</h2>
+        <p class="note">Scan this S$0.01 QR with your own banking app. It should show your name and number. Cancel, don't pay.</p>
+        <div id="testQr"></div>
+        <div class="row">
+          <button class="btn ghost small" type="button" id="bExport">Copy backup</button>
+          <button class="btn ghost small" type="button" id="bImport">Restore from backup</button>
+        </div>
+        <textarea id="bBackup" class="mono" hidden placeholder="Paste a backup here, then press Restore again" style="font-size:12px"></textarea>
+        <div class="row" id="resetRow">
+          <button class="btn ghost small" type="button" id="bReset">Erase all data</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CUSTOMER VIEW (opened from a shared link) -->
+  <section id="vCustomer" hidden>
+    <div style="max-width:620px;margin:0 auto;display:grid;gap:12px">
+      <div id="custSheet"></div>
+      <p class="note" style="text-align:center">Scan the QR with your banking app, or pay by PayNow to the number shown, with the invoice number as reference.</p>
+    </div>
+  </section>
+
+  <footer>Works with PayNow via the SGQR format. Not affiliated with PayNow, ABS or any bank. Your data stays on this device.</footer>
+</div>
+
+<div class="overlay" id="overlay" hidden role="dialog" aria-modal="true" aria-label="Payment QR">
+  <div class="who" id="oWho"></div>
+  <div class="amt" id="oAmt"></div>
+  <div id="oQr"></div>
+  <div class="ref" id="oRef"></div>
+  <div class="row">
+    <button class="btn" type="button" id="oPaid">Paid, save it</button>
+    <button class="btn ghost" type="button" id="oClose">Cancel</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+/* ---------- PayNow / SGQR (EMVCo merchant-presented QR) ---------- */
+function tlv(id, v){ return id + String(v.length).padStart(2,'0') + v; }
+function crc16(s){
+  let c = 0xFFFF;
+  for (let i = 0; i < s.length; i++){
+    c ^= s.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) c = (c & 0x8000) ? ((c << 1) ^ 0x1021) & 0xFFFF : (c << 1) & 0xFFFF;
+  }
+  return c.toString(16).toUpperCase().padStart(4,'0');
+}
+const ascii = (s, n) => String(s||'').normalize('NFKD').replace(/[^\x20-\x7E]/g,'').trim().slice(0,n);
+function paynowPayload({type, proxy, cents, name, ref}){
+  const mai = tlv('00','SG.PAYNOW') + tlv('01', type === 'uen' ? '2' : '0') + tlv('02', proxy) + tlv('03', '0');
+  let p = tlv('00','01') + tlv('01', cents ? '12' : '11') + tlv('26', mai) + tlv('52','0000') + tlv('53','702');
+  if (cents) p += tlv('54', (cents/100).toFixed(2));
+  p += tlv('58','SG') + tlv('59', ascii(name,25) || 'NA') + tlv('60','Singapore');
+  const r = ascii(ref,25).replace(/[^A-Za-z0-9 \-\/.]/g,'');
+  if (r) p += tlv('62', tlv('01', r));
+  p += '6304';
+  return p + crc16(p);
+}
+function normProxy(type, raw){
+  const s = String(raw||'').replace(/[\s-]/g,'').toUpperCase();
+  if (type === 'uen') return /^[0-9A-Z]{9,10}$/.test(s) ? s : null;
+  const d = s.replace(/^\+?65/,'');
+  return /^[89]\d{7}$/.test(d) ? '+65' + d : null;
+}
+function qrHtml(payload, cls){
+  if (typeof qrcode !== 'function') return `<div class="qrfail">QR needs an internet connection the first time this page loads.</div>`;
+  const q = qrcode(0, 'M'); q.addData(payload); q.make();
+  return `<img class="${cls||''}" alt="PayNow QR code" src="${q.createDataURL(8, 2)}">`;
+}
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money = c => 'S$' + (c/100).toLocaleString('en-SG',{minimumFractionDigits:2,maximumFractionDigits:2});
+const toCents = v => { const n = parseFloat(String(v).replace(/[^0-9.]/g,'')); return isFinite(n) ? Math.round(n*100) : 0; };
+const iso = d => new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+const today = () => iso(new Date());
+const addDays = (s, n) => { const d = new Date(s + 'T00:00'); d.setDate(d.getDate() + n); return iso(d); };
+const fmtDate = s => s ? new Date(s + 'T00:00').toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'}) : '';
+let framed = false; try { framed = window.self !== window.top; } catch(e){ framed = true; }
+function toast(m){ const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('show'), 1800); }
+async function copy(text, okMsg){
+  try { await navigator.clipboard.writeText(text); toast(okMsg); }
+  catch(e){ const ta = $('bBackup'); ta.hidden = false; ta.value = text; ta.select(); toast('Select and copy the text below'); }
+}
+
+/* ---------- state ---------- */
+const KEY = 'chop-invoice-v1';
+function sample(){
+  const t = today();
+  return {
+    tab:'invoice', seq:3,
+    biz:{ name:'Ah Hock Kopi (example)', type:'mobile', proxy:'91234567', meta:'Blk 216 Bedok North St 1 #01-32\n9123 4567',
+          prefix:'INV', terms:14, gst:false, gstNo:'', chips:'1.8, 3.5, 5, 10', sample:true },
+    draft: blankDraft({prefix:'INV', terms:14}, 3, t, {
+      cust:'Lim Engineering Pte Ltd', custC:'accounts@lim-eng.sg',
+      items:[{d:'Office breakfast catering, 20 pax', q:'1', p:'180'},{d:'Kopi / teh urns (2 x 5 L)', q:'2', p:'35'},{d:'Delivery to Ubi', q:'1', p:'15'}],
+      notes:'Thank you! Please pay within 14 days.' }),
+    history:[
+      {id:'s1', kind:'invoice', no:'INV-0002', cust:'Bedok CC Committee', date:addDays(t,-20), due:addDays(t,-6), total:24000, paid:false, data:null},
+      {id:'s2', kind:'invoice', no:'INV-0001', cust:'Mdm Tan', date:addDays(t,-30), due:addDays(t,-16), total:8500, paid:true, data:null},
+      {id:'s3', kind:'charge', no:'Table 4', cust:'Quick charge', date:t, due:t, total:1050, paid:true, data:null}
+    ]
+  };
+}
+function blankDraft(biz, seq, t, extra){
+  t = t || today();
+  return Object.assign({ id:null, no:`${biz.prefix || 'INV'}-${String(seq).padStart(4,'0')}`, date:t, due:addDays(t, +biz.terms || 0),
+    cust:'', custC:'', items:[{d:'',q:'1',p:''}], notes:'', paid:false }, extra || {});
+}
+let S;
+try { S = JSON.parse(localStorage.getItem(KEY)); } catch(e){}
+if (!S || !S.biz) S = sample();
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
+
+function totals(d, gst){
+  const sub = d.items.reduce((a, it) => a + Math.round((parseFloat(it.q) || 0) * toCents(it.p)), 0);
+  const tax = gst ? Math.round(sub * 0.09) : 0;
+  return { sub, tax, total: sub + tax };
+}
+function proxyOk(){ return normProxy(S.biz.type, S.biz.proxy); }
+
+/* ---------- invoice sheet ---------- */
+function sheetHtml(biz, d){
+  const t = totals(d, biz.gst);
+  const proxy = normProxy(biz.type, biz.proxy);
+  const payload = proxy && t.total > 0 ? paynowPayload({type:biz.type, proxy, cents:t.total, name:biz.name, ref:d.no}) : null;
+  const rows = d.items.filter(it => it.d || toCents(it.p)).map(it => {
+    const line = Math.round((parseFloat(it.q) || 0) * toCents(it.p));
+    return `<tr><td>${esc(it.d) || '<span style="color:var(--paper-muted)">Item</span>'}</td><td class="r mono">${esc(it.q)}</td><td class="r mono">${money(toCents(it.p))}</td><td class="r mono">${money(line)}</td></tr>`;
+  }).join('') || `<tr><td colspan="4" style="color:var(--paper-muted)">Add an item to start.</td></tr>`;
+  return `<article class="sheet">
+    ${d.paid ? '<div class="paid-chop">PAID</div>' : ''}
+    <div class="top">
+      <div style="min-width:0"><div class="bizname">${esc(biz.name) || 'Your business'}</div>
+        <div class="meta">${esc(biz.meta)}${biz.gst && biz.gstNo ? `\nGST Reg. ${esc(biz.gstNo)}` : ''}</div></div>
+      <div class="doc"><div class="t">${biz.gst ? 'TAX INVOICE' : 'INVOICE'}</div><div class="n">${esc(d.no)}</div></div>
+    </div>
+    <div class="parties">
+      <div style="min-width:0"><div class="lbl">Bill to</div><div style="font-weight:600">${esc(d.cust) || '—'}</div><div class="meta" style="margin:0">${esc(d.custC)}</div></div>
+      <div style="text-align:right"><div class="lbl">Issued</div><div class="mono">${fmtDate(d.date)}</div><div class="lbl" style="margin-top:6px">Due</div><div class="mono">${fmtDate(d.due)}</div></div>
+    </div>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Description</th><th class="r">Qty</th><th class="r">Unit</th><th class="r">Amount</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <div class="sum mono">
+      ${biz.gst ? `<div><span>Subtotal</span><span>${money(t.sub)}</span></div><div><span>GST 9%</span><span>${money(t.tax)}</span></div>` : ''}
+      <div class="grand"><span>Total</span><span>${money(t.total)}</span></div>
+    </div>
+    <div class="pay">
+      ${payload ? qrHtml(payload) : `<div class="qrfail">${proxy ? 'QR appears once the total is above $0' : 'Add your PayNow number in My business'}</div>`}
+      <div class="how"><b>Pay by PayNow</b>
+        Scan with any banking app, or PayNow to<br><span class="mono">${esc(proxy || biz.proxy || '—')}</span> (${biz.type === 'uen' ? 'UEN' : 'mobile'})<br>
+        Reference: <span class="mono">${esc(d.no)}</span></div>
+    </div>
+    ${d.notes ? `<div class="notes">${esc(d.notes)}</div>` : ''}
+  </article>`;
+}
+
+/* ---------- tabs ---------- */
+function setTab(tab){
+  S.tab = tab; save();
+  document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab));
+  document.querySelectorAll('[data-view]').forEach(v => v.hidden = v.dataset.view !== tab);
+  render();
+}
+$('tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setTab(b.dataset.tab); });
+document.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => setTab(b.dataset.goto)));
+
+function render(){
+  $('sampleBanner').hidden = !S.biz.sample;
+  if (S.tab === 'invoice') renderInvoice();
+  if (S.tab === 'history') renderHistory();
+  if (S.tab === 'charge') renderCharge();
+  if (S.tab === 'business') renderBusiness();
+}
+
+/* ---------- invoice editor ---------- */
+function fillInvoiceForm(){
+  const d = S.draft;
+  $('iNo').value = d.no; $('iDate').value = d.date; $('iDue').value = d.due;
+  $('iCust').value = d.cust; $('iCustC').value = d.custC; $('iNotes').value = d.notes;
+  renderItems();
+}
+function renderItems(){
+  $('items').innerHTML = `<div class="it head"><span>Description</span><span>Qty</span><span>Unit S$</span><span></span></div>` +
+    S.draft.items.map((it, i) => `<div class="it" data-i="${i}">
+      <input id="it-d-${i}" data-k="d" value="${esc(it.d)}" placeholder="What you sold" aria-label="Description">
+      <input id="it-q-${i}" data-k="q" value="${esc(it.q)}" inputmode="decimal" class="mono" aria-label="Quantity">
+      <input id="it-p-${i}" data-k="p" value="${esc(it.p)}" inputmode="decimal" class="mono" placeholder="0.00" aria-label="Unit price">
+      <button class="x" type="button" data-del="${i}" aria-label="Remove item">×</button></div>`).join('');
+}
+function renderInvoice(){
+  const d = S.draft, t = totals(d, S.biz.gst);
+  $('iState').textContent = d.id ? (d.paid ? 'saved · paid' : 'saved') : 'draft';
+  $('edTot').innerHTML = (S.biz.gst ? `<div><span>Subtotal</span><span>${money(t.sub)}</span></div><div><span>GST 9%</span><span>${money(t.tax)}</span></div>` : '') +
+    `<div class="grand"><span>Total</span><span>${money(t.total)}</span></div>`;
+  $('sheetHost').innerHTML = sheetHtml(S.biz, d);
+  $('iPaid').textContent = d.paid ? 'Mark unpaid' : 'Mark paid';
+  $('iWa').href = 'https://wa.me/?text=' + encodeURIComponent(waText());
+}
+['iNo','iDate','iDue','iCust','iCustC','iNotes'].forEach(id => $(id).addEventListener('input', e => {
+  const k = {iNo:'no',iDate:'date',iDue:'due',iCust:'cust',iCustC:'custC',iNotes:'notes'}[id];
+  S.draft[k] = e.target.value; save(); renderInvoice();
+}));
+$('items').addEventListener('input', e => {
+  const row = e.target.closest('[data-i]'); if (!row) return;
+  S.draft.items[+row.dataset.i][e.target.dataset.k] = e.target.value; save(); renderInvoice();
+});
+$('items').addEventListener('click', e => {
+  const b = e.target.closest('[data-del]'); if (!b) return;
+  S.draft.items.splice(+b.dataset.del, 1);
+  if (!S.draft.items.length) S.draft.items.push({d:'',q:'1',p:''});
+  save(); renderItems(); renderInvoice();
+});
+$('addItem').addEventListener('click', () => {
+  S.draft.items.push({d:'',q:'1',p:''}); save(); renderItems(); renderInvoice();
+  $('it-d-' + (S.draft.items.length - 1)).focus();
+});
+function shareLink(){
+  const data = { b:{n:S.biz.name, t:S.biz.type, p:S.biz.proxy, m:S.biz.meta, g:S.biz.gst, gn:S.biz.gstNo}, d:S.draft };
+  const bytes = new TextEncoder().encode(JSON.stringify(data));
+  let bin = ''; bytes.forEach(b => bin += String.fromCharCode(b));
+  return location.href.split('#')[0] + '#inv=' + btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function waText(){
+  const d = S.draft, t = totals(d, S.biz.gst), proxy = proxyOk() || S.biz.proxy;
+  let m = `Hi${d.cust ? ' ' + d.cust : ''}, here's invoice ${d.no} from ${S.biz.name}: ${money(t.total)}, due ${fmtDate(d.due)}.\n` +
+          `Please PayNow to ${proxy} (${S.biz.type === 'uen' ? 'UEN' : 'mobile'}) with reference ${d.no}.`;
+  if (!framed) m += `\nInvoice and QR: ${shareLink()}`;
+  return m + '\nThank you!';
+}
+function upsertHistory(entry){
+  const i = S.history.findIndex(h => h.id === entry.id);
+  if (i >= 0) S.history[i] = entry; else S.history.unshift(entry);
+}
+$('iSave').addEventListener('click', () => {
+  const d = S.draft, isNew = !d.id;
+  if (isNew){ d.id = 'i' + Date.now(); S.seq++; }
+  upsertHistory({ id:d.id, kind:'invoice', no:d.no, cust:d.cust || 'No name', date:d.date, due:d.due, total:totals(d, S.biz.gst).total, paid:d.paid, data:JSON.parse(JSON.stringify(d)) });
+  save(); renderInvoice(); toast(isNew ? 'Saved to history' : 'Updated');
+});
+$('iPaid').addEventListener('click', () => {
+  S.draft.paid = !S.draft.paid;
+  const h = S.history.find(h => h.id === S.draft.id); if (h){ h.paid = S.draft.paid; h.data.paid = S.draft.paid; }
+  save(); renderInvoice();
+});
+$('iNew').addEventListener('click', () => { S.draft = blankDraft(S.biz, S.seq); save(); fillInvoiceForm(); renderInvoice(); $('iCust').focus(); });
+$('iCopyMsg').addEventListener('click', () => copy(waText(), 'Message copied'));
+$('iLink').addEventListener('click', () => copy(shareLink(), 'Customer link copied'));
+$('iPrint').addEventListener('click', () => window.print());
+if (framed){ document.querySelectorAll('[data-standalone]').forEach(b => b.hidden = true); $('framedNote').hidden = false; }
+
+/* ---------- quick charge ---------- */
+let pending = null;
+function renderCharge(){
+  const chips = String(S.biz.chips || '').split(',').map(s => toCents(s)).filter(Boolean);
+  $('qChips').innerHTML = chips.map(c => `<button type="button" data-c="${c}">${money(c)}</button>`).join('');
+  const t = today(), list = S.history.filter(h => h.kind === 'charge' && h.date === t);
+  $('qTodayMeta').textContent = `${list.length} paid · ${money(list.reduce((a, h) => a + h.total, 0))}`;
+  $('qToday').innerHTML = list.length ? list.map(h => `<div class="h"><div style="min-width:0"><div class="t">${esc(h.no) || 'Quick charge'}</div><div class="m">${fmtDate(h.date)}</div></div><span class="mono">${money(h.total)}</span><button class="x" type="button" data-rm="${h.id}" aria-label="Remove">×</button></div>`).join('')
+    : `<div class="empty">Charges you mark as paid show up here.</div>`;
+}
+$('qChips').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (b) $('qAmt').value = (b.dataset.c/100).toFixed(2); });
+$('qToday').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (!b) return; S.history = S.history.filter(h => h.id !== b.dataset.rm); save(); renderCharge(); });
+$('qShow').addEventListener('click', () => {
+  const cents = toCents($('qAmt').value), proxy = proxyOk();
+  if (!proxy){ toast('Add your PayNow number first'); setTab('business'); return; }
+  if (cents < 1){ toast('Enter an amount'); $('qAmt').focus(); return; }
+  const ref = $('qRef').value.trim();
+  pending = { cents, ref };
+  $('oWho').textContent = S.biz.name; $('oAmt').textContent = money(cents);
+  $('oQr').innerHTML = qrHtml(paynowPayload({type:S.biz.type, proxy, cents, name:S.biz.name, ref}));
+  $('oRef').textContent = (ref ? ref + ' · ' : '') + 'PayNow ' + proxy;
+  $('overlay').hidden = false;
+  try { navigator.wakeLock && navigator.wakeLock.request('screen').then(l => pending.lock = l).catch(() => {}); } catch(e){}
+});
+function closeOverlay(){ $('overlay').hidden = true; try { pending && pending.lock && pending.lock.release(); } catch(e){} }
+$('oClose').addEventListener('click', () => { closeOverlay(); pending = null; });
+$('oPaid').addEventListener('click', () => {
+  S.history.unshift({ id:'c' + Date.now(), kind:'charge', no:pending.ref, cust:'Quick charge', date:today(), due:today(), total:pending.cents, paid:true, data:null });
+  save(); closeOverlay(); pending = null; $('qAmt').value = ''; $('qRef').value = ''; renderCharge(); toast('Saved');
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('overlay').hidden) $('oClose').click(); });
+
+/* ---------- history ---------- */
+function status(h){ return h.paid ? 'paid' : (h.due < today() ? 'overdue' : 'unpaid'); }
+function renderHistory(){
+  const inv = S.history.filter(h => h.kind === 'invoice');
+  const owed = inv.filter(h => !h.paid), over = owed.filter(h => h.due < today());
+  const m = today().slice(0,7), got = S.history.filter(h => h.paid && h.date.slice(0,7) === m).reduce((a, h) => a + h.total, 0);
+  $('hMeta').textContent = `${S.history.length} records`;
+  $('kpis').innerHTML = `<div class="kpi"><div class="k">Owed to you</div><div class="v">${money(owed.reduce((a, h) => a + h.total, 0))}</div></div>
+    <div class="kpi"><div class="k">Overdue</div><div class="v" style="color:${over.length ? 'var(--stamp)' : 'inherit'}">${over.length}</div></div>
+    <div class="kpi"><div class="k">Paid this month</div><div class="v">${money(got)}</div></div>`;
+  $('hist').innerHTML = S.history.length ? S.history.map(h => { const st = status(h); return `<div class="h">
+      <div style="min-width:0;cursor:${h.data ? 'pointer' : 'default'}" data-open="${h.id}"><div class="t">${esc(h.no) || 'Quick charge'} · ${esc(h.cust)}</div>
+      <div class="m">${h.kind === 'charge' ? 'Charged ' + fmtDate(h.date) : 'Due ' + fmtDate(h.due)}</div></div>
+      <span class="mono">${money(h.total)}</span>
+      <button class="pill ${st}" type="button" data-toggle="${h.id}">${st[0].toUpperCase() + st.slice(1)}</button></div>`; }).join('')
+    : `<div class="empty">Saved invoices and paid quick charges show up here.</div>`;
+}
+$('hist').addEventListener('click', e => {
+  const tg = e.target.closest('[data-toggle]');
+  if (tg){ const h = S.history.find(h => h.id === tg.dataset.toggle); h.paid = !h.paid; if (h.data) h.data.paid = h.paid; if (S.draft.id === h.id) S.draft.paid = h.paid; save(); renderHistory(); return; }
+  const op = e.target.closest('[data-open]');
+  if (op){ const h = S.history.find(h => h.id === op.dataset.open); if (h && h.data){ S.draft = JSON.parse(JSON.stringify(h.data)); save(); fillInvoiceForm(); setTab('invoice'); } }
+});
+
+/* ---------- business ---------- */
+function fillBusinessForm(){
+  const b = S.biz;
+  $('bName').value = b.name; $('bType').value = b.type; $('bProxy').value = b.proxy; $('bMeta').value = b.meta;
+  $('bPrefix').value = b.prefix; $('bTerms').value = b.terms; $('bGst').checked = b.gst; $('bGstNo').value = b.gstNo; $('bChips').value = b.chips;
+}
+function renderBusiness(){
+  const b = S.biz, proxy = proxyOk();
+  $('bProxyL').textContent = b.type === 'uen' ? 'UEN' : 'PayNow mobile number';
+  $('bProxyHint').textContent = proxy ? `Customers will pay ${proxy}.` : (b.type === 'uen' ? 'A UEN is 9 or 10 letters and digits, e.g. 53312345K.' : 'An 8-digit Singapore mobile starting with 8 or 9.');
+  $('bProxyHint').style.color = proxy ? 'var(--good)' : 'var(--warn)';
+  $('gstRow').hidden = !b.gst;
+  $('testQr').innerHTML = proxy ? `<div style="background:var(--paper);border-radius:10px;padding:10px;width:max-content;max-width:100%">${qrHtml(paynowPayload({type:b.type, proxy, cents:1, name:b.name, ref:'TEST'}), '')}</div>` : `<div class="empty">Enter a valid PayNow number to see your test QR.</div>`;
+  const img = $('testQr').querySelector('img'); if (img){ img.style.width = '180px'; img.style.imageRendering = 'pixelated'; }
+}
+const bMap = {bName:'name',bType:'type',bProxy:'proxy',bMeta:'meta',bPrefix:'prefix',bTerms:'terms',bGstNo:'gstNo',bChips:'chips'};
+Object.keys(bMap).forEach(id => $(id).addEventListener('input', e => {
+  S.biz[bMap[id]] = e.target.value; if (id === 'bName' || id === 'bProxy') S.biz.sample = false; save(); render();
+}));
+$('bGst').addEventListener('change', e => { S.biz.gst = e.target.checked; save(); render(); });
+$('bExport').addEventListener('click', () => copy(JSON.stringify(S), 'Backup copied. Paste it somewhere safe'));
+$('bImport').addEventListener('click', () => {
+  const ta = $('bBackup');
+  if (ta.hidden || !ta.value.trim()){ ta.hidden = false; ta.value = ''; ta.focus(); toast('Paste your backup, then press Restore again'); return; }
+  try { const n = JSON.parse(ta.value); if (!n.biz) throw 0; S = n; save(); ta.hidden = true; boot(); toast('Restored'); }
+  catch(e){ toast("That doesn't look like a Chop Invoice backup"); }
+});
+$('bReset').addEventListener('click', () => {
+  const b = $('bReset');
+  if (b.dataset.armed){ try { localStorage.removeItem(KEY); } catch(e){} S = sample(); save(); delete b.dataset.armed; b.textContent = 'Erase all data'; boot(); toast('Erased. Example data is back'); return; }
+  b.dataset.armed = '1'; b.textContent = 'Tap again to erase everything';
+  setTimeout(() => { delete b.dataset.armed; b.textContent = 'Erase all data'; }, 4000);
+});
+
+/* ---------- customer view from a shared link ---------- */
+function readShared(){
+  const m = location.hash.match(/^#inv=([\w-]+)$/); if (!m) return null;
+  try {
+    const bin = atob(m[1].replace(/-/g,'+').replace(/_/g,'/'));
+    const o = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
+    return { biz:{ name:o.b.n, type:o.b.t, proxy:o.b.p, meta:o.b.m, gst:o.b.g, gstNo:o.b.gn }, d:o.d };
+  } catch(e){ return null; }
+}
+
+function boot(){
+  const shared = readShared();
+  if (shared){
+    document.querySelector('header').hidden = true; $('sampleBanner').hidden = true;
+    document.querySelectorAll('[data-view]').forEach(v => v.hidden = true);
+    $('vCustomer').hidden = false; $('custSheet').innerHTML = sheetHtml(shared.biz, shared.d);
+    document.title = `Invoice ${shared.d.no} · ${shared.biz.name}`;
+    return;
+  }
+  fillInvoiceForm(); fillBusinessForm(); setTab(S.tab || 'invoice');
+}
+window.addEventListener('hashchange', () => location.reload());
+boot();
+</script>
+</body>
+</html>
